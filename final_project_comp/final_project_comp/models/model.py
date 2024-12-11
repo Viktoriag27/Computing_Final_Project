@@ -1,8 +1,8 @@
 # Import necessary libraries and modules
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import GridSearchCV
 from xgboost import XGBRegressor
 from catboost import CatBoostRegressor
+from sklearn.model_selection import GridSearchCV
 import numpy as np
 import pandas as pd
 
@@ -49,11 +49,24 @@ class HousePriceModel:
                 raise ValueError("X and y must have same length")
     
     # Method to train the model on the provided data
-    def train(self, X_train, y_train):
+    def train(self, X_train, y_train, model_type='RandomForest'):
         # Validate the input data
         self._validate_data(X_train, y_train, is_training=True)
-        # Initialize a RandomForestRegressor model
-        self.model = RandomForestRegressor(random_state=42)
+        
+        # Initialize models
+        models = {
+            'RandomForest': RandomForestRegressor(random_state=42),
+            'XGBoost': XGBRegressor(random_state=42, use_label_encoder=False, verbosity=0),
+            'CatBoost': CatBoostRegressor(random_state=42, verbose=0)
+        }
+        
+        # Check if the specified model type is valid
+        if model_type not in models:
+            raise ValueError(f"Invalid model_type '{model_type}'. Choose from: {list(models.keys())}")
+        
+        # Select the model based on the specified type
+        self.model = models[model_type]
+        
         # Train the model on the data
         self.model.fit(X_train, y_train)
     

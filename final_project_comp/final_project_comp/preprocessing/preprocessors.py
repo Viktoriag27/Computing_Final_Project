@@ -38,9 +38,9 @@ class MissingValueImputer(BaseEstimator, TransformerMixin):
         """
         self._validate_data(X)
         if self.strategy == 'mean':
-            self.fill_values = X.mean()
+            self.fill_values = X.select_dtypes(include=[np.number]).mean()
         elif self.strategy == 'median':
-            self.fill_values = X.median()
+            self.fill_values = X.select_dtypes(include=[np.number]).median()
         return self
 
     def transform(self, X):

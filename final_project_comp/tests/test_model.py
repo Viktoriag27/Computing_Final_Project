@@ -16,10 +16,16 @@ def sample_data():
     - y: A Series containing target values for testing.
     """
     X = pd.DataFrame({
-        'feature1': range(100),  # Simulated feature data
-        'feature2': range(100)  # Another simulated feature
+        'MedInc': [1.0] * 100,
+        'HouseAge': [10] * 100,
+        'AveRooms': [5.0] * 100,
+        'AveBedrms': [1.0] * 100,
+        'Population': [300] * 100,
+        'AveOccup': [3.0] * 100,
+        'Latitude': [37.5] * 100,
+        'Longitude': [-120.0] * 100
     })
-    y = pd.Series(range(100))  # Simulated target values
+    y = pd.Series(range(100))
     return X, y
 
 def test_model_training(sample_data):

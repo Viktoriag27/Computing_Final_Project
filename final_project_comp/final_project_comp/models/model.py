@@ -1,8 +1,8 @@
 # Import necessary libraries and modules
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import GridSearchCV
 from xgboost import XGBRegressor
 from catboost import CatBoostRegressor
-from sklearn.model_selection import GridSearchCV
 import numpy as np
 import pandas as pd
 
@@ -14,6 +14,7 @@ class HousePriceModel:
         self.model = None          # To store the trained model
         self.best_params = None    # To store the best hyperparameters found during tuning
         self.cv_results = None     # To store the results of cross-validation from grid search
+        self.best_model_name = None  # To store the name of the best model
         
     # Private method to validate the input data
     def _validate_data(self, X, y=None, is_training=False):
@@ -48,34 +49,19 @@ class HousePriceModel:
             if len(X) != len(y):
                 raise ValueError("X and y must have same length")
     
-    # Method to train the model on the provided data
-    def train(self, X_train, y_train, model_type='RandomForest'):
+    # Method to train and select the best model on the provided data
+    def train(self, X_train, y_train):
         # Validate the input data
         self._validate_data(X_train, y_train, is_training=True)
         
-        # Initialize models
+        # Define models
         models = {
             'RandomForest': RandomForestRegressor(random_state=42),
             'XGBoost': XGBRegressor(random_state=42, use_label_encoder=False, verbosity=0),
             'CatBoost': CatBoostRegressor(random_state=42, verbose=0)
         }
         
-        # Check if the specified model type is valid
-        if model_type not in models:
-            raise ValueError(f"Invalid model_type '{model_type}'. Choose from: {list(models.keys())}")
-        
-        # Select the model based on the specified type
-        self.model = models[model_type]
-        
-        # Train the model on the data
-        self.model.fit(X_train, y_train)
-    
-    # Method to perform hyperparameter tuning using GridSearchCV
-    def tune_hyperparameters(self, X_train, y_train):
-        # Validate the input data
-        self._validate_data(X_train, y_train, is_training=True)
-        
-        # Define parameter grids for RandomForest, XGBoost, and CatBoost
+        # Define parameter grids for each model
         param_grids = {
             'RandomForest': {
                 'n_estimators': [100, 200],
@@ -97,19 +83,13 @@ class HousePriceModel:
             }
         }
         
-        # Initialize models
-        models = {
-            'RandomForest': RandomForestRegressor(random_state=42),
-            'XGBoost': XGBRegressor(random_state=42, use_label_encoder=False, verbosity=0),
-            'CatBoost': CatBoostRegressor(random_state=42, verbose=0)
-        }
-        
         best_model = None
         best_score = float('-inf')
         best_params = None
         best_cv_results = None
+        best_model_name = None
         
-        # Perform grid search for each model
+        # Perform training and selection for each model
         for model_name, model in models.items():
             grid_search = GridSearchCV(
                 model,
@@ -126,12 +106,14 @@ class HousePriceModel:
                 best_model = grid_search.best_estimator_
                 best_params = grid_search.best_params_
                 best_cv_results = grid_search.cv_results_
+                best_model_name = model_name
         
         # Store the best model, parameters, and results
         self.model = best_model
         self.best_params = best_params
         self.cv_results = best_cv_results
-    
+        self.best_model_name = best_model_name
+        
     # Method to make predictions using the trained model
     def predict(self, X):
         # Validate the input data

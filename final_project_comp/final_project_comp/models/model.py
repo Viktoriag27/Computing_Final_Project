@@ -14,7 +14,6 @@ class HousePriceModel:
         self.model = None          # To store the trained model
         self.best_params = None    # To store the best hyperparameters found during tuning
         self.cv_results = None     # To store the results of cross-validation from grid search
-        self.best_model_name = None  # To store the name of the best model
         
     # Private method to validate the input data
     def _validate_data(self, X, y=None, is_training=False):
@@ -49,71 +48,83 @@ class HousePriceModel:
             if len(X) != len(y):
                 raise ValueError("X and y must have same length")
     
-    # Method to train and select the best model on the provided data
+    # Method to train the model on the provided data
     def train(self, X_train, y_train):
         # Validate the input data
         self._validate_data(X_train, y_train, is_training=True)
-        
-        # Define models
-        models = {
-            'RandomForest': RandomForestRegressor(random_state=42),
-            'XGBoost': XGBRegressor(random_state=42, use_label_encoder=False, verbosity=0),
-            'CatBoost': CatBoostRegressor(random_state=42, verbose=0)
-        }
-        
-        # Define parameter grids for each model
-        param_grids = {
+        # Initialize a RandomForestRegressor model
+        self.model = RandomForestRegressor(random_state=42)
+        # Train the model on the data
+        self.model.fit(X_train, y_train)
+
+    # Method to perform hyperparameter tuning using GridSearchCV
+    def tune_hyperparameters(self, X_train, y_train):
+        # Validate the input data
+        self._validate_data(X_train, y_train, is_training=True)
+
+        # Define a dictionary of models with their respective hyperparameter grids
+        model_param_grids = {
             'RandomForest': {
-                'n_estimators': [100, 200],
-                'max_depth': [10, 20],
-                'min_samples_split': [2, 5],
-                'min_samples_leaf': [1, 2]
+                'model': RandomForestRegressor(random_state=42),
+                'param_grid': {
+                    'n_estimators': [100],
+                    'max_depth': [10],
+                    'min_samples_split': [2],
+                    'min_samples_leaf': [1]
+                }
             },
             'XGBoost': {
-                'n_estimators': [100, 200],
-                'max_depth': [3, 5],
-                'learning_rate': [0.1, 0.05],
-                'subsample': [0.8, 1.0]
+                'model': XGBRegressor(random_state=42, use_label_encoder=False, eval_metric='rmse'),
+                'param_grid': {
+                    'n_estimators': [100],
+                    'max_depth': [10],
+                    'learning_rate': [0.1],
+                    'subsample': [0.8]
+                }
             },
             'CatBoost': {
-                'iterations': [100, 200],
-                'depth': [6, 8],
-                'learning_rate': [0.1, 0.05],
-                'l2_leaf_reg': [3, 5]
+                'model': CatBoostRegressor(random_state=42, silent=True),
+                'param_grid': {
+                    'iterations': [100],
+                    'depth': [10],
+                    'learning_rate': [0.1]
+                }
             }
         }
-        
+
         best_model = None
         best_score = float('-inf')
         best_params = None
-        best_cv_results = None
-        best_model_name = None
-        
-        # Perform training and selection for each model
-        for model_name, model in models.items():
+        cv_results = None
+
+        # Iterate through each model and its hyperparameter grid
+        for model_name, config in model_param_grids.items():
+            print(f"Tuning hyperparameters for {model_name}...")
             grid_search = GridSearchCV(
-                model,
-                param_grids[model_name],
-                cv=3,
-                scoring='neg_mean_squared_error',
-                n_jobs=-1
+                config['model'],                # Model to tune
+                config['param_grid'],           # Hyperparameter grid
+                cv=3,                           # Number of cross-validation folds
+                scoring='neg_mean_squared_error', # Scoring metric for evaluation (negative MSE)
+                n_jobs=-1                       # Use all CPU cores for parallel computation
             )
+
+            # Perform grid search on the training data
             grid_search.fit(X_train, y_train)
-            
-            # Update best model if current model is better
+
+            # Check if this model is better than the current best
             if grid_search.best_score_ > best_score:
-                best_score = grid_search.best_score_
                 best_model = grid_search.best_estimator_
+                best_score = grid_search.best_score_
                 best_params = grid_search.best_params_
-                best_cv_results = grid_search.cv_results_
-                best_model_name = model_name
-        
-        # Store the best model, parameters, and results
+                cv_results = grid_search.cv_results_
+
+        # Store the best model found during the grid search
         self.model = best_model
+        # Store the best hyperparameters
         self.best_params = best_params
-        self.cv_results = best_cv_results
-        self.best_model_name = best_model_name
-        
+        # Store the cross-validation results
+        self.cv_results = cv_results
+    
     # Method to make predictions using the trained model
     def predict(self, X):
         # Validate the input data

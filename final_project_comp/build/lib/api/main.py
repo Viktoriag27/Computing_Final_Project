@@ -4,7 +4,7 @@ from pydantic import BaseModel
 import pandas as pd
 import joblib
 import numpy as np
-from typing import List, Optional
+from typing import List
 from pathlib import Path
 import os
 
@@ -14,7 +14,7 @@ scaler = None
 feature_transformers = None
 
 # Use a relative path based on the location of the current script
-model_path = Path(__file__).parent.parent / 'model'
+model_path = Path(__file__).parent / 'model'
 # model_path = Path("/Users/macbookpro/Desktop/Victoria/DSDM/04_COMPUTING/final_project_comp/model")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -46,7 +46,7 @@ class HouseFeatures(BaseModel):
 # Define Pydantic model for prediction response
 class PredictionResponse(BaseModel):
     predicted_price: float
-    # confidence_interval: Optional[List[float]]
+    confidence_interval: List[float]
 
 @app.post("/predict", response_model=PredictionResponse)
 async def predict(features: HouseFeatures):
@@ -82,21 +82,19 @@ async def predict(features: HouseFeatures):
         # Main prediction using the model
         prediction = model.predict(feature_data)[0]
         
-        # # Calculate confidence intervals using bootstrapping (from individual trees in the model)
-        # predictions = []
-        # has_estimators = hasattr(model.model,"estimators_")
-        # confidence_interval_result = None
-        # if has_estimators == True:
-        #     for estimator in model.model.estimators_:
-        #         pred = estimator.predict(feature_data)
-        #         predictions.append(pred[0])
+        # Calculate confidence intervals using bootstrapping (from individual trees in the model)
+        predictions = []
+        for estimator in model.estimators_:
+            pred = estimator.predict(feature_data)
+            predictions.append(pred[0])
         
-        #     # Confidence interval using percentiles
-        #     confidence_interval = np.percentile(predictions, [2.5, 97.5])
-        #     confidence_interval_result = confidence_interval.tolist()
-        # # Return the predicted price and the confidence interval
+        # Confidence interval using percentiles
+        confidence_interval = np.percentile(predictions, [2.5, 97.5])
+        
+        # Return the predicted price and the confidence interval
         return {
-            "predicted_price": float(prediction)
+            "predicted_price": float(prediction),
+            "confidence_interval": confidence_interval.tolist()
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

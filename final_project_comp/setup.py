@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="final_project_comp",
-    version="0.1.0",
+    version="0.1.1",
     packages=find_packages(),
     install_requires=[
         "numpy>=1.19.2",
@@ -13,6 +13,8 @@ setup(
         "pytest>=6.2.0",
         "joblib>=1.0.0",
         "pydantic>=1.8.0",
+        "xgboost>=1.5.0",
+        "catboost>=1.0.0"
     ],
     author="Viktoria Gagua, Angad Sahota, Alejandro Delgado",
     author_email="viktoria.gagua@bse.eu",

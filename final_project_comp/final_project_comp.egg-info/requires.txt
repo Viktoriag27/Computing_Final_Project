@@ -6,3 +6,5 @@ uvicorn>=0.13.0
 pytest>=6.2.0
 joblib>=1.0.0
 pydantic>=1.8.0
+xgboost>=1.5.0
+catboost>=1.0.0

@@ -9,3 +9,5 @@ pydantic>=2.6.3
 python-dotenv>=1.0.1
 matplotlib>=3.8.3
 seaborn>=0.13.2
+xgboost>=1.5.0
+catboost>=1.0.0

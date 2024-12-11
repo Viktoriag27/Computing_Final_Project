@@ -1,6 +1,8 @@
 # Import necessary libraries and modules
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import GridSearchCV
+from xgboost import XGBRegressor
+from catboost import CatBoostRegressor
 import numpy as np
 import pandas as pd
 
@@ -60,31 +62,62 @@ class HousePriceModel:
         # Validate the input data
         self._validate_data(X_train, y_train, is_training=True)
         
-        # Define a grid of hyperparameters to search over
-        param_grid = {
-            'n_estimators': [100],      # Number of trees in the forest
-            'max_depth': [10],           # Maximum depth of the trees
-            'min_samples_split': [2],    # Minimum number of samples required to split a node
-            'min_samples_leaf': [1]      # Minimum number of samples required to be at a leaf node
+        # Define parameter grids for RandomForest, XGBoost, and CatBoost
+        param_grids = {
+            'RandomForest': {
+                'n_estimators': [100, 200],
+                'max_depth': [10, 20],
+                'min_samples_split': [2, 5],
+                'min_samples_leaf': [1, 2]
+            },
+            'XGBoost': {
+                'n_estimators': [100, 200],
+                'max_depth': [3, 5],
+                'learning_rate': [0.1, 0.05],
+                'subsample': [0.8, 1.0]
+            },
+            'CatBoost': {
+                'iterations': [100, 200],
+                'depth': [6, 8],
+                'learning_rate': [0.1, 0.05],
+                'l2_leaf_reg': [3, 5]
+            }
         }
         
-        # Set up GridSearchCV to perform cross-validation with the hyperparameter grid
-        grid_search = GridSearchCV(
-            RandomForestRegressor(random_state=42),  # Model to tune
-            param_grid,                              # Hyperparameter grid
-            cv=3,                                    # Number of cross-validation folds
-            scoring='neg_mean_squared_error',        # Scoring metric for evaluation (negative MSE)
-            n_jobs=-1                                 # Use all CPU cores for parallel computation
-        )
+        # Initialize models
+        models = {
+            'RandomForest': RandomForestRegressor(random_state=42),
+            'XGBoost': XGBRegressor(random_state=42, use_label_encoder=False, verbosity=0),
+            'CatBoost': CatBoostRegressor(random_state=42, verbose=0)
+        }
         
-        # Perform grid search on the training data
-        grid_search.fit(X_train, y_train)
-        # Store the best model found during the grid search
-        self.model = grid_search.best_estimator_
-        # Store the best hyperparameters
-        self.best_params = grid_search.best_params_
-        # Store the cross-validation results
-        self.cv_results = grid_search.cv_results_
+        best_model = None
+        best_score = float('-inf')
+        best_params = None
+        best_cv_results = None
+        
+        # Perform grid search for each model
+        for model_name, model in models.items():
+            grid_search = GridSearchCV(
+                model,
+                param_grids[model_name],
+                cv=3,
+                scoring='neg_mean_squared_error',
+                n_jobs=-1
+            )
+            grid_search.fit(X_train, y_train)
+            
+            # Update best model if current model is better
+            if grid_search.best_score_ > best_score:
+                best_score = grid_search.best_score_
+                best_model = grid_search.best_estimator_
+                best_params = grid_search.best_params_
+                best_cv_results = grid_search.cv_results_
+        
+        # Store the best model, parameters, and results
+        self.model = best_model
+        self.best_params = best_params
+        self.cv_results = best_cv_results
     
     # Method to make predictions using the trained model
     def predict(self, X):

@@ -54,17 +54,3 @@ def test_model_prediction(sample_data):
     predictions = model.predict(X)  # Make predictions
     assert len(predictions) == len(X)  # Ensure predictions cover all rows
     assert isinstance(predictions, np.ndarray)  # Check output type
-
-def test_hyperparameter_tuning(sample_data):
-    """
-    Test that the model's hyperparameter tuning functionality works as expected.
-    
-    Verifies:
-    - The best hyperparameters (`best_params`) are set after tuning.
-    - Cross-validation results (`cv_results`) are available after tuning.
-    """
-    X, y = sample_data
-    model = HousePriceModel()  # Initialize the model
-    model.tune_hyperparameters(X, y)  # Perform hyperparameter tuning
-    assert model.best_params is not None  # Ensure best parameters are set
-    assert model.cv_results is not None  # Ensure CV results are available

@@ -25,25 +25,16 @@ URL: https://scikit-learn.org/stable/datasets/real_world.html#california-housing
 - `tests/`: Unit tests
 - `notebooks/`: Example notebooks
 
-## Adding New Components
+## Features
+- **Preprocessing**: Handles missing values, scales numerical features, and encodes categorical variables.
+- **Feature Engineering**: Implements custom transformers to add meaningful features for better predictive power.
+- **Modeling**:
+  - Random Forest
+  - XGBoost
+  - CatBoost
+- **Unit Testing**: Ensures functionality and reliability of key components through automated tests.
 
-### New Preprocessors
-1. Create new class in `preprocessing/preprocessors.py`
-2. Inherit from `BaseEstimator` and `TransformerMixin`
-3. Implement `fit` and `transform` methods
-4. Add unit tests
-
-### New Features
-1. Add new feature class in `features/feature_engineering.py`
-2. Follow sklearn transformer interface
-3. Document feature logic
-4. Add tests in `tests/test_features.py`
-
-### New Models
-1. Create model class in `models/`
-2. Implement training and prediction methods
-3. Add hyperparameter tuning support
-4. Include tests
+---
 
 ## API Usage
 

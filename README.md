@@ -35,6 +35,7 @@ URL: https://scikit-learn.org/stable/datasets/real_world.html#california-housing
 - **Unit Testing**: Ensures functionality and reliability of key components through automated tests.
 
 ---
+
 ## Scaling Features and Model Selection
 Feature preprocessing
 - Additional methods for handling missing values and outliers can be incorporated within the architecture
@@ -42,8 +43,8 @@ Feature preprocessing
 - Further feature evaluation functions can be added with EDA and Frequency distribution checks once the number of feature quantum scales.
 
 New models can be incorporated by the following steps in model.py file
--- Loading relevant library
--- Adding the model optimisation details within model_param_grids dictionary in the function tune_hyperparameters 
+- Loading relevant library
+- Adding the model optimisation details within model_param_grids dictionary in the function tune_hyperparameters 
 
 Additional Evaluation metrics can be incorporated in the evaluate function by including the additional evaluation formula
 
